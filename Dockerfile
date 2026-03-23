@@ -20,9 +20,5 @@ COPY app/ app/
 # Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/api/health')"
-
-# Run application
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Run application using Python to properly handle PORT env var
+CMD python -c "import os, uvicorn; uvicorn.run('app.main:app', host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))"
