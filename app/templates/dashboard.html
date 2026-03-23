@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ContentPilot AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-text { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .sidebar { background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%); }
+        .loading { animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div class="px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold">CP</span>
+                </div>
+                <span class="text-xl font-bold text-gray-900">ContentPilot</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="text-right">
+                    <p id="userEmail" class="text-sm font-medium text-gray-900">user@example.com</p>
+                    <p id="tierBadge" class="text-xs text-gray-600">Free Plan</p>
+                </div>
+                <button onclick="handleLogout()" class="text-gray-600 hover:text-gray-900 font-medium text-sm">
+                    Sign Out
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 min-h-screen border-r border-gray-200 p-6">
+            <div class="space-y-4">
+                <button onclick="switchTab('generate')" class="sidebar-btn w-full text-left px-4 py-3 rounded-lg font-medium text-gray-900 hover:bg-gray-100 transition active">
+                    ✨ Generate Content
+                </button>
+                <button onclick="switchTab('history')" class="sidebar-btn w-full text-left px-4 py-3 rounded-lg font-medium text-gray-600 hover:bg-gray-100 transition">
+                    📚 Generation History
+                </button>
+                <button onclick="switchTab('usage')" class="sidebar-btn w-full text-left px-4 py-3 rounded-lg font-medium text-gray-600 hover:bg-gray-100 transition">
+                    📊 Usage & Stats
+                </button>
+                <button onclick="switchTab('upgrade')" class="sidebar-btn w-full text-left px-4 py-3 rounded-lg font-medium text-gray-600 hover:bg-gray-100 transition">
+                    💳 Upgrade Plan
+                </button>
+                <button onclick="switchTab('settings')" class="sidebar-btn w-full text-left px-4 py-3 rounded-lg font-medium text-gray-600 hover:bg-gray-100 transition">
+                    ⚙️ Settings
+                </button>
+            </div>
+
+            <!-- Upgrade CTA -->
+            <div class="mt-8 p-4 bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-lg">
+                <h3 class="font-bold mb-2">Ready to upgrade?</h3>
+                <p class="text-sm text-blue-100 mb-4">Get unlimited generations with our Pro plan.</p>
+                <button onclick="switchTab('upgrade')" class="w-full bg-white text-purple-600 py-2 rounded font-bold text-sm hover:bg-gray-100 transition">
+                    View Plans
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-8">
+            <!-- Generate Content Tab -->
+            <div id="generate-tab" class="tab-content">
+                <div class="mb-8">
+                    <h1 class="text-4xl font-bold text-gray-900 mb-2">Generate Content</h1>
+                    <p class="text-gray-600">Create high-quality content in seconds with AI</p>
+                </div>
+
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <!-- Generation Form -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-xl border border-gray-200 p-8">
+                            <form id="contentForm" onsubmit="handleGenerateContent(event)">
+                                <!-- Content Type Selection -->
+                                <div class="mb-6">
+                                    <label class="block text-sm font-bold text-gray-900 mb-3">Content Type</label>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <label class="content-type-option cursor-pointer">
+                                            <input type="radio" name="content_type" value="blog_post" class="sr-only" checked>
+                                            <div class="p-4 border-2 border-blue-500 bg-blue-50 rounded-lg hover:border-blue-600 transition">
+                                                <span class="text-2xl block mb-2">📝</span>
+                                                <span class="font-bold text-gray-900">Blog Post</span>
+                                            </div>
+                                        </label>
+                                        <label class="content-type-option cursor-pointer">
+                                            <input type="radio" name="content_type" value="social_media" class="sr-only">
+                                            <div class="p-4 border-2 border-gray-300 rounded-lg hover:border-blue-500 transition">
+                                                <span class="text-2xl block mb-2">📱</span>
+                                                <span class="font-bold text-gray-900">Social Media</span>
+                                            </div>
+                                        </label>
+                                        <label class="content-type-option cursor-pointer">
+                                            <input type="radio" name="content_type" value="email_copy" class="sr-only">
+                                            <div class="p-4 border-2 border-gray-300 rounded-lg hover:border-blue-500 transition">
+                                                <span class="text-2xl block mb-2">✉️</span>
+                                                <span class="font-bold text-gray-900">Email Copy</span>
+                                            </div>
+                                        </label>
+                                        <label class="content-type-option cursor-pointer">
+                                            <input type="radio" name="content_type" value="ad_copy" class="sr-only">
+                                            <div class="p-4 border-2 border-gray-300 rounded-lg hover:border-blue-500 transition">
+                                                <span class="text-2xl block mb-2">🎯</span>
+                                                <span class="font-bold text-gray-900">Ad Copy</span>
+                                            </div>
+                                        </label>
+                                        <label class="content-type-option cursor-pointer">
+                                            <input type="radio" name="content_type" value="seo_content" class="sr-only">
+                                            <div class="p-4 border-2 border-gray-300 rounded-lg hover:border-blue-500 transition">
+                                                <span class="text-2xl block mb-2">🔍</span>
+                                                <span class="font-bold text-gray-900">SEO Content</span>
+                                            </div>
+                                        </label>
+                                        <label class="content-type-option cursor-pointer">
+                                            <input type="radio" name="content_type" value="product_description" class="sr-only">
+                                            <div class="p-4 border-2 border-gray-300 rounded-lg hover:border-blue-500 transition">
+                                                <span class="text-2xl block mb-2">🛍️</span>
+                                                <span class="font-bold text-gray-900">Product Desc</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Additional Parameters -->
+                                <div class="mb-6" id="additionalParams">
+                                    <label class="block text-sm font-bold text-gray-900 mb-2">Keywords (optional)</label>
+                                    <input type="text" id="keywords" placeholder="e.g. AI, content generation, marketing" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                </div>
+
+                                <!-- Main Prompt -->
+                                <div class="mb-6">
+                                    <label class="block text-sm font-bold text-gray-900 mb-2">Topic or Prompt</label>
+                                    <textarea id="prompt" name="prompt" placeholder="Describe what you want to create..." required minlength="10" rows="5" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 resize-none"></textarea>
+                                    <p class="text-xs text-gray-600 mt-1">Minimum 10 characters</p>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <button type="submit" id="generateBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-3 rounded-lg hover:shadow-lg transition">
+                                    Generate Content
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="space-y-4">
+                        <div class="bg-white rounded-xl border border-gray-200 p-6">
+                            <h3 class="text-sm font-bold text-gray-600 mb-4">USAGE THIS MONTH</h3>
+                            <div class="mb-4">
+                                <div class="flex justify-between mb-2">
+                                    <span id="usageCount" class="text-3xl font-bold text-gray-900">0</span>
+                                    <span id="usageLimit" class="text-lg text-gray-600">/ 50</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div id="usageBar" class="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <p id="remainingText" class="text-sm text-gray-600">50 remaining</p>
+                        </div>
+
+                        <div class="bg-blue-50 rounded-xl border border-blue-200 p-6">
+                            <h3 class="text-sm font-bold text-blue-900 mb-2">💡 Pro Tip</h3>
+                            <p class="text-sm text-blue-800">The more specific your prompt, the better the generated content. Include details about your target audience!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generated Output -->
+                <div id="outputSection" class="hidden mt-8">
+                    <div class="bg-white rounded-xl border border-gray-200 p-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-bold text-gray-900">Generated Content</h2>
+                            <button onclick="copyToClipboard()" class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                                📋 Copy
+                            </button>
+                        </div>
+                        <div id="generatedOutput" class="bg-gray-50 rounded-lg p-6 border border-gray-200 mb-4 max-h-96 overflow-y-auto whitespace-pre-wrap text-gray-800">
+                            <!-- Generated content will appear here -->
+                        </div>
+                        <button onclick="downloadContent()" class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                            ⬇️ Download
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div id="history-tab" class="tab-content hidden">
+                <div class="mb-8">
+                    <h1 class="text-4xl font-bold text-gray-900 mb-2">Generation History</h1>
+                    <p class="text-gray-600">View all your previously generated content</p>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-sm font-bold text-gray-900">Type</th>
+                                <th class="px-6 py-3 text-left text-sm font-bold text-gray-900">Prompt</th>
+                                <th class="px-6 py-3 text-left text-sm font-bold text-gray-900">Tokens</th>
+                                <th class="px-6 py-3 text-left text-sm font-bold text-gray-900">Created</th>
+                                <th class="px-6 py-3 text-left text-sm font-bold text-gray-900">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTable" class="divide-y divide-gray-200">
+                            <tr class="loading">
+                                <td colspan="5" class="px-6 py-4 text-center text-gray-600">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Usage Stats Tab -->
+            <div id="usage-tab" class="tab-content hidden">
+                <div class="mb-8">
+                    <h1 class="text-4xl font-bold text-gray-900 mb-2">Usage & Statistics</h1>
+                    <p class="text-gray-600">Track your content generation usage</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white rounded-xl border border-gray-200 p-6">
+                        <p class="text-sm text-gray-600 mb-2">Current Plan</p>
+                        <p id="currentPlan" class="text-3xl font-bold text-gray-900">Free</p>
+                        <p class="text-xs text-gray-600 mt-2">$0 / month</p>
+                    </div>
+                    <div class="bg-white rounded-xl border border-gray-200 p-6">
+                        <p class="text-sm text-gray-600 mb-2">Generations Used</p>
+                        <p id="totalUsed" class="text-3xl font-bold text-gray-900">0</p>
+                        <p class="text-xs text-gray-600 mt-2">This month</p>
+                    </div>
+                    <div class="bg-white rounded-xl border border-gray-200 p-6">
+                        <p class="text-sm text-gray-600 mb-2">Remaining</p>
+                        <p id="totalRemaining" class="text-3xl font-bold text-gray-900">50</p>
+                        <p class="text-xs text-gray-600 mt-2">Available</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 p-8">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Usage Overview</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-medium text-gray-900">Blog Posts</span>
+                                <span class="text-gray-600">5 / 50</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: 10%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-medium text-gray-900">Social Media Posts</span>
+                                <span class="text-gray-600">8 / 50</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-purple-500 h-2 rounded-full" style="width: 16%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-medium text-gray-900">Email Copies</span>
+                                <span class="text-gray-600">2 / 50</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-pink-500 h-2 rounded-full" style="width: 4%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upgrade Tab -->
+            <div id="upgrade-tab" class="tab-content hidden">
+                <div class="mb-8">
+                    <h1 class="text-4xl font-bold text-gray-900 mb-2">Upgrade Your Plan</h1>
+                    <p class="text-gray-600">Get more generations and premium features</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Starter -->
+                    <div class="bg-white rounded-xl border border-gray-200 p-8">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Starter</h3>
+                        <p class="text-gray-600 mb-6">Perfect for getting started</p>
+                        <div class="mb-6">
+                            <span class="text-4xl font-bold text-gray-900">$29</span>
+                            <span class="text-gray-600">/month</span>
+                        </div>
+                        <button onclick="handleUpgrade('starter')" class="w-full bg-gray-100 text-gray-900 py-3 rounded-lg font-bold hover:bg-gray-200 transition mb-6">
+                            Choose Plan
+                        </button>
+                        <ul class="space-y-3 text-gray-600">
+                            <li>✓ 50 generations/month</li>
+                            <li>✓ Basic support</li>
+                            <li>✓ API access</li>
+                        </ul>
+                    </div>
+
+                    <!-- Pro -->
+                    <div class="bg-gradient-to-br from-blue-600 to-purple-600 text-white rounded-xl border-2 border-blue-400 p-8 transform scale-105">
+                        <div class="inline-block bg-yellow-300 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full mb-4">
+                            MOST POPULAR
+                        </div>
+                        <h3 class="text-2xl font-bold mb-2">Pro</h3>
+                        <p class="text-blue-100 mb-6">Best for creators</p>
+                        <div class="mb-6">
+                            <span class="text-4xl font-bold">$79</span>
+                            <span class="text-blue-100">/month</span>
+                        </div>
+                        <button onclick="handleUpgrade('pro')" class="w-full bg-white text-purple-600 py-3 rounded-lg font-bold hover:shadow-lg transition mb-6">
+                            Choose Plan
+                        </button>
+                        <ul class="space-y-3 text-blue-100">
+                            <li>✓ 200 generations/month</li>
+                            <li>✓ Priority support</li>
+                            <li>✓ Advanced analytics</li>
+                            <li>✓ API access</li>
+                        </ul>
+                    </div>
+
+                    <!-- Agency -->
+                    <div class="bg-white rounded-xl border border-gray-200 p-8">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Agency</h3>
+                        <p class="text-gray-600 mb-6">For teams</p>
+                        <div class="mb-6">
+                            <span class="text-4xl font-bold text-gray-900">$199</span>
+                            <span class="text-gray-600">/month</span>
+                        </div>
+                        <button onclick="handleUpgrade('agency')" class="w-full bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 transition mb-6">
+                            Choose Plan
+                        </button>
+                        <ul class="space-y-3 text-gray-600">
+                            <li>✓ Unlimited generations</li>
+                            <li>✓ Dedicated support</li>
+                            <li>✓ Advanced analytics</li>
+                            <li>✓ Team management</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="tab-content hidden">
+                <div class="mb-8">
+                    <h1 class="text-4xl font-bold text-gray-900 mb-2">Account Settings</h1>
+                    <p class="text-gray-600">Manage your account and API keys</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Profile -->
+                    <div class="bg-white rounded-xl border border-gray-200 p-8">
+                        <h2 class="text-xl font-bold text-gray-900 mb-6">Profile Information</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-900 mb-2">Email</label>
+                                <input id="settingsEmail" type="email" disabled class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-900 mb-2">Subscription Tier</label>
+                                <input id="settingsTier" type="text" disabled class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-900 mb-2">Member Since</label>
+                                <input id="settingsDate" type="text" disabled class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API Key -->
+                    <div class="bg-white rounded-xl border border-gray-200 p-8">
+                        <h2 class="text-xl font-bold text-gray-900 mb-6">API Key</h2>
+                        <p class="text-gray-600 text-sm mb-4">Use this key to authenticate API requests</p>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 break-all">
+                            <code id="apiKey" class="text-xs text-gray-800">sk_test_••••••••••</code>
+                        </div>
+                        <button onclick="toggleAPIKey()" class="text-blue-600 hover:text-blue-700 font-medium text-sm mr-4">
+                            Show/Hide
+                        </button>
+                        <button onclick="copyAPIKey()" class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="bg-red-50 rounded-xl border border-red-200 p-8 mt-8">
+                    <h2 class="text-xl font-bold text-red-900 mb-4">Danger Zone</h2>
+                    <button onclick="handleDeleteAccount()" class="bg-red-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700 transition">
+                        Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let currentUsage = null;
+        let allContent = [];
+
+        // Initialize dashboard
+        async function initDashboard() {
+            try {
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    window.location.href = '/';
+                    return;
+                }
+
+                // Fetch user profile
+                const profileRes = await fetch('/api/user/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!profileRes.ok) {
+                    localStorage.removeItem('auth_token');
+                    window.location.href = '/';
+                    return;
+                }
+
+                currentUser = await profileRes.json();
+                document.getElementById('userEmail').textContent = currentUser.email;
+                document.getElementById('tierBadge').textContent = currentUser.subscription_tier.charAt(0).toUpperCase() + currentUser.subscription_tier.slice(1) + ' Plan';
+
+                // Fetch usage stats
+                const usageRes = await fetch('/api/user/usage', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (usageRes.ok) {
+                    currentUsage = await usageRes.json();
+                    updateUsageDisplay();
+                }
+
+                // Load initial content history
+                loadContentHistory();
+
+                // Update settings
+                document.getElementById('settingsEmail').value = currentUser.email;
+                document.getElementById('settingsTier').value = currentUser.subscription_tier.toUpperCase();
+                document.getElementById('settingsDate').value = new Date(currentUser.created_at).toLocaleDateString();
+
+            } catch (error) {
+                console.error('Failed to initialize dashboard:', error);
+                alert('Failed to load dashboard. Please try again.');
+            }
+        }
+
+        function updateUsageDisplay() {
+            if (!currentUsage) return;
+
+            const percentage = (currentUsage.usage_count / (currentUsage.usage_limit || 1)) * 100;
+            document.getElementById('usageCount').textContent = currentUsage.usage_count;
+            document.getElementById('usageLimit').textContent = `/ ${currentUsage.is_unlimited ? '∞' : currentUsage.usage_limit}`;
+            document.getElementById('usageBar').style.width = Math.min(percentage, 100) + '%';
+            document.getElementById('remainingText').textContent = `${currentUsage.remaining} remaining`;
+
+            // Update stats tab
+            document.getElementById('currentPlan').textContent = currentUsage.tier.charAt(0).toUpperCase() + currentUsage.tier.slice(1);
+            document.getElementById('totalUsed').textContent = currentUsage.usage_count;
+            document.getElementById('totalRemaining').textContent = currentUsage.is_unlimited ? '∞' : currentUsage.remaining;
+        }
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.remove('hidden');
+
+            // Update sidebar buttons
+            document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active', 'text-gray-900', 'bg-gray-100'));
+            event.target.classList.add('active', 'text-gray-900', 'bg-gray-100');
+            event.target.classList.remove('text-gray-600');
+        }
+
+        async function handleGenerateContent(event) {
+            event.preventDefault();
+
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                alert('Please log in first');
+                return;
+            }
+
+            const contentType = document.querySelector('input[name="content_type"]:checked').value;
+            const prompt = document.getElementById('prompt').value;
+            const keywords = document.getElementById('keywords').value;
+
+            if (!prompt || prompt.length < 10) {
+                alert('Please enter a prompt (minimum 10 characters)');
+                return;
+            }
+
+            try {
+                const btn = document.getElementById('generateBtn');
+                btn.disabled = true;
+                btn.textContent = 'Generating...';
+
+                const requestBody = {
+                    content_type: contentType,
+                    prompt: prompt,
+                    additional_params: { keywords }
+                };
+
+                const res = await fetch('/api/content/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!res.ok) {
+                    const error = await res.json();
+                    throw new Error(error.detail || 'Generation failed');
+                }
+
+                const result = await res.json();
+
+                // Display output
+                document.getElementById('generatedOutput').textContent = result.output;
+                document.getElementById('outputSection').classList.remove('hidden');
+
+                // Refresh usage
+                const usageRes = await fetch('/api/user/usage', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (usageRes.ok) {
+                    currentUsage = await usageRes.json();
+                    updateUsageDisplay();
+                }
+
+                // Clear form
+                document.getElementById('prompt').value = '';
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                const btn = document.getElementById('generateBtn');
+                btn.disabled = false;
+                btn.textContent = 'Generate Content';
+            }
+        }
+
+        async function loadContentHistory() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) return;
+
+            try {
+                const res = await fetch('/api/content/history?limit=50', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!res.ok) throw new Error('Failed to load history');
+
+                allContent = await res.json();
+                const tableBody = document.getElementById('historyTable');
+                tableBody.innerHTML = '';
+
+                if (allContent.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-600">No content generated yet</td></tr>';
+                    return;
+                }
+
+                allContent.forEach((content, index) => {
+                    const date = new Date(content.created_at).toLocaleDateString();
+                    const icon = getContentIcon(content.content_type);
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">${icon} ${content.content_type}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600 truncate max-w-xs">${content.prompt}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">${content.tokens_used}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">${date}</td>
+                            <td class="px-6 py-4 text-sm">
+                                <button onclick="viewContent(${index})" class="text-blue-600 hover:text-blue-700">View</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error('Failed to load history:', error);
+            }
+        }
+
+        function getContentIcon(type) {
+            const icons = {
+                'blog_post': '📝',
+                'social_media': '📱',
+                'email_copy': '✉️',
+                'ad_copy': '🎯',
+                'seo_content': '🔍',
+                'product_description': '🛍️'
+            };
+            return icons[type] || '📄';
+        }
+
+        function viewContent(index) {
+            const content = allContent[index];
+            document.getElementById('generatedOutput').textContent = content.output || '(No output saved)';
+            document.getElementById('outputSection').classList.remove('hidden');
+            document.getElementById('generate-tab').scrollIntoView();
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('generatedOutput').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
+
+        function downloadContent() {
+            const text = document.getElementById('generatedOutput').textContent;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'content-' + new Date().getTime() + '.txt';
+            a.click();
+        }
+
+        function toggleAPIKey() {
+            const apiKeyEl = document.getElementById('apiKey');
+            if (apiKeyEl.textContent === 'sk_test_••••••••••') {
+                // In production, fetch real API key
+                apiKeyEl.textContent = 'sk_test_1234567890abcdef';
+            } else {
+                apiKeyEl.textContent = 'sk_test_••••••••••';
+            }
+        }
+
+        function copyAPIKey() {
+            const text = document.getElementById('apiKey').textContent;
+            if (text !== 'sk_test_••••••••••') {
+                navigator.clipboard.writeText(text);
+                alert('API key copied!');
+            }
+        }
+
+        function handleUpgrade(tier) {
+            alert(`Upgrading to ${tier} plan...\n\nIn production, this would redirect to Stripe checkout.`);
+        }
+
+        function handleDeleteAccount() {
+            if (confirm('Are you sure? This action cannot be undone.')) {
+                alert('Account deletion initiated.\n\nIn production, this would trigger account deletion process.');
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('auth_token');
+            window.location.href = '/';
+        }
+
+        // Initialize on load
+        window.addEventListener('load', initDashboard);
+
+        // Handle content type selection
+        document.addEventListener('change', function(e) {
+            if (e.target.name === 'content_type') {
+                const selected = e.target.closest('label');
+                document.querySelectorAll('.content-type-option').forEach(opt => {
+                    opt.querySelector('div').classList.remove('border-blue-500', 'bg-blue-50');
+                    opt.querySelector('div').classList.add('border-gray-300');
+                });
+                selected.querySelector('div').classList.add('border-blue-500', 'bg-blue-50');
+            }
+        });
+    </script>
+</body>
+</html>

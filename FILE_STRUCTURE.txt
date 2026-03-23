@@ -1,0 +1,312 @@
+================================================================================
+ContentPilot AI - Complete File Structure
+================================================================================
+
+PROJECT ROOT: /sessions/ecstatic-intelligent-hypatia/mnt/Bussniess/ContentPilot-AI/
+
+CORE APPLICATION FILES
+================================================================================
+
+📄 config.py (2.7 KB)
+   - Configuration management
+   - Environment variable loading
+   - Settings for all environments (dev, prod, test)
+   - Pricing tiers, API limits, refund thresholds
+
+📄 requirements.txt (152 B)
+   - Project dependencies
+   - Anthropic, python-dotenv, requests, stripe
+
+📄 .env.example (871 B)
+   - Example environment configuration
+   - Copy to .env and fill with your API keys
+   - Never commit real .env with production keys
+
+📄 run.sh (executable)
+   - Quick startup script
+   - Creates virtual environment
+   - Installs dependencies
+   - Runs orchestrator
+
+AGENTS DIRECTORY
+================================================================================
+
+app/agents/ - AI Agent Implementations
+
+📄 __init__.py (420 B)
+   - Package initialization
+   - Exports all agent classes
+
+📄 support_agent.py (9.2 KB) ⭐
+   Customer Support AI Agent
+   • Monitors and classifies support tickets
+   • Generates contextual AI responses
+   • Escalates low-confidence issues
+   • Built-in FAQ knowledge base
+   • Auto-response for common questions
+   
+   Key Classes:
+   - SupportAgent (main agent class)
+   
+   Key Methods:
+   - classify_ticket() - Categorize tickets
+   - generate_response() - Create AI responses
+   - process_ticket() - Full workflow
+   - escalate_ticket() - Flag for manual review
+   - get_statistics() - Agent metrics
+
+📄 marketing_agent.py (13 KB) ⭐
+   Marketing AI Agent
+   • Generates SEO-optimized blog posts (3x/week)
+   • Creates social media content (Twitter, LinkedIn, Instagram)
+   • Manages email marketing campaigns
+   • A/B tests subject lines
+   • Maintains content calendar
+   • Generates SEO metadata
+   
+   Key Classes:
+   - MarketingAgent (main agent class)
+   
+   Key Methods:
+   - generate_blog_post() - Create blog content
+   - generate_social_media_posts() - Multi-platform content
+   - create_email_campaign() - Email sequences
+   - plan_content_calendar() - 4-week planning
+   - generate_seo_metadata() - On-page optimization
+   - track_performance() - Content metrics
+
+📄 sales_agent.py (15 KB) ⭐
+   Sales AI Agent
+   • Sends personalized welcome emails
+   • Creates trial-to-paid conversion sequences (Day 1, 3, 5, 7)
+   • Identifies at-risk customers
+   • Manages re-engagement campaigns
+   • Creates upsell sequences (Starter→Pro→Agency)
+   • Runs win-back campaigns
+   
+   Key Classes:
+   - SalesAgent (main agent class)
+   
+   Key Methods:
+   - generate_welcome_email() - New user onboarding
+   - create_trial_conversion_sequence() - 4-email series
+   - identify_at_risk_customers() - Churn prediction
+   - create_reengagement_email() - Re-engagement
+   - create_upsell_sequence() - Plan upgrades
+   - create_winback_campaign() - Churn recovery
+   - track_conversion_metrics() - Conversion tracking
+
+📄 analytics_agent.py (16 KB) ⭐
+   Analytics AI Agent
+   • Generates daily/weekly business reports
+   • Tracks KPIs: MRR, churn, conversion, CAC, LTV
+   • Identifies trends and anomalies
+   • Provides data-driven recommendations
+   • Generates dashboard visualization data
+   • Monitors API costs
+   
+   Key Classes:
+   - AnalyticsAgent (main agent class)
+   
+   Key Methods:
+   - calculate_kpis() - Revenue & growth metrics
+   - generate_daily_report() - Daily summary
+   - generate_weekly_report() - Comprehensive analysis
+   - identify_trends_and_anomalies() - Pattern detection
+   - generate_recommendations() - Data-driven actions
+   - generate_dashboard_data() - Chart data
+   - monitor_api_costs() - Cost tracking
+
+📄 billing_agent.py (17 KB) ⭐
+   Billing AI Agent
+   • Monitors Stripe webhooks
+   • Handles failed payment recovery (3-email sequence)
+   • Manages subscription upgrades/downgrades
+   • Sends usage limit warnings (80%, 95%, 100%)
+   • Generates and sends invoices
+   • Auto-approves refunds <$50
+   • Reconciles monthly revenue
+   
+   Key Classes:
+   - BillingAgent (main agent class)
+   
+   Key Methods:
+   - handle_failed_payment() - Payment recovery
+   - handle_subscription_change() - Plan changes
+   - send_usage_limit_warning() - Usage alerts
+   - generate_invoice() - Invoice creation
+   - handle_refund_request() - Refund processing
+   - reconcile_monthly_revenue() - Financial reports
+
+📄 orchestrator.py (17 KB) ⭐
+   Master Orchestrator Agent
+   • Coordinates all other agents
+   • Manages scheduling and execution
+   • Performs health checks
+   • Provides unified logging
+   • Handles inter-agent communication
+   • Can be run standalone
+   
+   Key Classes:
+   - Orchestrator (coordinator class)
+   
+   Key Methods:
+   - check_agent_health() - Health checks
+   - run_support_workflow() - Support workflow
+   - run_marketing_workflow() - Marketing workflow
+   - run_sales_workflow() - Sales workflow
+   - run_analytics_workflow() - Analytics workflow
+   - run_billing_workflow() - Billing workflow
+   - run_all_workflows() - Coordinated execution
+   - get_execution_summary() - Statistics
+
+APPLICATION MODULES (AUTO-GENERATED)
+================================================================================
+
+app/
+├── __init__.py (40 B)
+│   Package initialization
+│
+├── main.py (auto-generated)
+│   FastAPI application entry point
+│
+├── agents/
+│   └── [6 agent files listed above]
+│
+├── models/
+│   ├── __init__.py
+│   └── database.py (auto-generated)
+│       SQLAlchemy database models
+│
+└── services/
+    ├── __init__.py
+    ├── ai_service.py (auto-generated)
+    │   AI API wrapper functions
+    │
+    └── stripe_service.py (auto-generated)
+        Stripe integration functions
+
+DOCUMENTATION FILES
+================================================================================
+
+📘 README.md (9.2 KB)
+   Main project documentation
+   • Feature overview
+   • Agent descriptions
+   • Installation instructions
+   • Configuration guide
+   • Usage examples
+   • Architecture diagram
+   • Logging and troubleshooting
+   • Security best practices
+
+📗 QUICKSTART.md (5+ KB)
+   Quick start guide for new users
+   • 5-minute setup
+   • Running individual agents
+   • Python usage examples
+   • Docker setup
+   • Monitoring commands
+   • Common issues & solutions
+   • Scheduled execution (cron, Windows Task Scheduler)
+   • Production deployment checklist
+
+📙 AGENTS_API.md (20+ KB)
+   Comprehensive API reference for all agents
+   • Support Agent API reference
+   • Marketing Agent API reference
+   • Sales Agent API reference
+   • Analytics Agent API reference
+   • Billing Agent API reference
+   • Orchestrator API reference
+   • Parameter descriptions
+   • Return value examples
+   • Usage code examples
+   • Error handling
+   • Rate limits
+
+📕 FILE_STRUCTURE.txt (this file)
+   Project structure and file descriptions
+
+CONFIGURATION & DEPLOYMENT
+================================================================================
+
+📄 docker-compose.yml (992 B)
+   Docker Compose configuration
+   • PostgreSQL service
+   • Redis cache service
+   • Application container
+   • Environment setup
+   • Health checks
+   • Volume mounts
+
+📄 Dockerfile (446 B)
+   Docker image configuration
+   • Python 3.11 slim base
+   • System dependencies
+   • Python dependencies
+   • Application copy
+   • Logs directory creation
+
+LOGS DIRECTORY (CREATED AT RUNTIME)
+================================================================================
+
+logs/
+└── orchestrator.log
+    Combined logs from all agents
+    • Support agent activities
+    • Marketing agent activities
+    • Sales agent activities
+    • Analytics agent activities
+    • Billing agent activities
+    • Health checks
+    • Error messages
+
+================================================================================
+TOTAL PROJECT SIZE: ~150 KB (including documentation)
+================================================================================
+
+AGENT RESPONSIBILITIES SUMMARY
+================================================================================
+
+SUPPORT AGENT
+└─ Input: Support tickets
+   └─ Process: Classify, respond, escalate
+   └─ Output: Responses, escalation flags, statistics
+
+MARKETING AGENT
+└─ Input: Content topics, calendar requests
+   └─ Process: Generate posts, campaigns, SEO metadata
+   └─ Output: Blog posts, social posts, email campaigns, calendar
+
+SALES AGENT
+└─ Input: User signups, customer data
+   └─ Process: Generate sequences, identify churn risks
+   └─ Output: Welcome emails, conversion sequences, upsells, winbacks
+
+ANALYTICS AGENT
+└─ Input: Business metrics, transaction data
+   └─ Process: Calculate KPIs, identify trends, generate reports
+   └─ Output: Reports, recommendations, dashboard data, alerts
+
+BILLING AGENT
+└─ Input: Payment events, subscription changes, refund requests
+   └─ Process: Handle payments, manage subscriptions, generate invoices
+   └─ Output: Recovery sequences, confirmations, invoices, reconciliations
+
+ORCHESTRATOR
+└─ Input: Business state (all events and metrics)
+   └─ Process: Coordinate agents, health checks, unified logging
+   └─ Output: Combined results, health status, execution logs
+
+================================================================================
+GETTING STARTED
+================================================================================
+
+1. Read: QUICKSTART.md (5-minute setup)
+2. Install: pip install -r requirements.txt
+3. Configure: cp .env.example .env (add your API keys)
+4. Run: python -m app.agents.orchestrator
+5. Reference: AGENTS_API.md (for detailed API usage)
+
+================================================================================
