@@ -228,7 +228,7 @@ async def dashboard():
 
 @app.post("/api/auth/register", response_model=Token)
 async def register(user_data: UserRegister, db: Session = Depends(get_db)):
-    """Register a new user with 50 free generations"""
+    """Register a new user with 1 free generation per day"""
     # Check if user exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
@@ -244,7 +244,7 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
         full_name=user_data.full_name,
         hashed_password=hashed_password,
         subscription_tier=SubscriptionTierEnum.FREE,
-        usage_limit=50
+        usage_limit=1
     )
     db.add(new_user)
     db.commit()

@@ -226,7 +226,7 @@ class StripeService:
 
             if user:
                 user.subscription_tier = SubscriptionTierEnum.FREE
-                user.usage_limit = 50
+                user.usage_limit = 1  # 1 free generation per day
                 user.stripe_subscription_id = None
                 db.commit()
                 logger.info(f"User {user.id} downgraded to free tier")
