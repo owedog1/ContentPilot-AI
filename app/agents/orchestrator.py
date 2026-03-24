@@ -11,21 +11,13 @@ from typing import Optional, List, Dict
 import anthropic
 
 # Import all agents
-from support_agent import SupportAgent
-from marketing_agent import MarketingAgent
-from sales_agent import SalesAgent
-from analytics_agent import AnalyticsAgent
-from billing_agent import BillingAgent
+from .support_agent import SupportAgent
+from .marketing_agent import MarketingAgent
+from .sales_agent import SalesAgent
+from .analytics_agent import AnalyticsAgent
+from .billing_agent import BillingAgent
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('/sessions/ecstatic-intelligent-hypatia/mnt/Bussniess/ContentPilot-AI/logs/orchestrator.log'),
-        logging.StreamHandler()
-    ]
-)
 logger = logging.getLogger(__name__)
 
 

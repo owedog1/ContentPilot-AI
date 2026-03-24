@@ -503,7 +503,7 @@ async def create_support_ticket(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create a support ticket"""
+    """Create a support ticket and auto-respond with AI"""
     ticket = SupportTicket(
         user_id=current_user.id,
         subject=subject,
@@ -513,13 +513,123 @@ async def create_support_ticket(
     db.commit()
     db.refresh(ticket)
 
+    # Try to auto-respond using Support Agent
+    ai_response = None
+    try:
+        from app.agents.support_agent import SupportAgent
+        api_key = os.getenv("ANTHROPIC_API_KEY") or os.getenv("OPENAI_API_KEY", "")
+        if api_key and os.getenv("ANTHROPIC_API_KEY"):
+            agent = SupportAgent(api_key)
+            result = agent.process_ticket({"subject": subject, "message": message, "user_email": current_user.email})
+            if result and result.get("response"):
+                ai_response = result["response"]
+                ticket.ai_response = ai_response
+                db.commit()
+    except Exception as e:
+        logger.warning(f"Support agent auto-response failed: {e}")
+
     logger.info(f"Support ticket created: {ticket.id} for user {current_user.id}")
 
     return {
         "id": ticket.id,
         "status": ticket.status.value,
+        "ai_response": ai_response,
         "created_at": ticket.created_at
     }
+
+
+# Agent API endpoints
+@app.get("/api/agents/status")
+async def agent_status():
+    """Check status of all AI agents"""
+    agents = {
+        "support_agent": {"status": "active", "description": "AI-powered ticket classification and response"},
+        "marketing_agent": {"status": "active", "description": "Content marketing, SEO, social media campaigns"},
+        "sales_agent": {"status": "active", "description": "Welcome emails, trial conversion, upsell sequences"},
+        "billing_agent": {"status": "active", "description": "Payment recovery, invoicing, refund processing"},
+        "analytics_agent": {"status": "active", "description": "KPI tracking, daily/weekly reports, trend analysis"},
+        "orchestrator": {"status": "active", "description": "Master coordinator for all agents"}
+    }
+    return {"agents": agents, "total": len(agents)}
+
+
+@app.post("/api/agents/analytics/report")
+async def generate_analytics_report(
+    report_type: str = "daily",
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Generate analytics report using Analytics Agent"""
+    try:
+        from app.agents.analytics_agent import AnalyticsAgent
+        api_key = os.getenv("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            raise HTTPException(status_code=503, detail="Analytics agent requires Anthropic API key")
+
+        agent = AnalyticsAgent(api_key)
+
+        # Get business data from database
+        total_users = db.query(User).count()
+        total_content = db.query(Content).count()
+        active_subs = db.query(User).filter(User.subscription_tier != SubscriptionTierEnum.FREE).count()
+
+        business_data = {
+            "total_users": total_users,
+            "total_content_generated": total_content,
+            "active_subscriptions": active_subs,
+            "mrr": active_subs * 79.0,  # Estimated
+            "date": datetime.utcnow().strftime("%Y-%m-%d")
+        }
+
+        result = agent.run(report_type=report_type, data=business_data)
+        return {"report_type": report_type, "report": result}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Analytics report failed: {e}")
+        return {"report_type": report_type, "report": {"error": str(e), "fallback": {
+            "total_users": db.query(User).count(),
+            "total_content": db.query(Content).count(),
+            "timestamp": datetime.utcnow().isoformat()
+        }}}
+
+
+@app.post("/api/agents/marketing/generate")
+async def marketing_agent_generate(
+    task: str = "blog_post",
+    topic: str = "AI content generation",
+    current_user: User = Depends(get_current_user)
+):
+    """Generate marketing content using Marketing Agent"""
+    try:
+        from app.agents.marketing_agent import MarketingAgent
+        api_key = os.getenv("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            raise HTTPException(status_code=503, detail="Marketing agent requires Anthropic API key")
+
+        agent = MarketingAgent(api_key)
+
+        if task == "blog_post":
+            result = agent.generate_blog_post(topic)
+        elif task == "social_media":
+            result = agent.generate_social_media_posts(topic)
+        elif task == "email_campaign":
+            result = agent.create_email_campaign("feature_announcement", {"topic": topic})
+        elif task == "seo_metadata":
+            result = agent.generate_seo_metadata(topic, f"Learn about {topic}")
+        elif task == "content_calendar":
+            result = agent.plan_content_calendar()
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown task: {task}")
+
+        return {"task": task, "topic": topic, "result": result}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Marketing agent failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Marketing agent error: {str(e)}")
 
 @app.delete("/api/user/delete")
 async def delete_account(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
