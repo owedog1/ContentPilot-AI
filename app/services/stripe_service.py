@@ -12,7 +12,13 @@ from app.models.database import User, SubscriptionTierEnum
 logger = logging.getLogger(__name__)
 
 # Initialize Stripe with API key
-stripe.api_key = os.getenv("STRIPE_API_KEY")
+def _init_stripe():
+    key = os.getenv("STRIPE_API_KEY", "")
+    if key:
+        stripe.api_key = key
+    return key
+
+_init_stripe()
 
 
 class StripeService:
@@ -43,6 +49,10 @@ class StripeService:
     @staticmethod
     def _get_or_create_price(tier: str) -> str:
         """Get or create a Stripe Price for the given tier."""
+        # Ensure API key is set
+        if not stripe.api_key:
+            stripe.api_key = os.getenv("STRIPE_API_KEY", "")
+
         if tier in StripeService._price_cache:
             return StripeService._price_cache[tier]
 
@@ -58,7 +68,8 @@ class StripeService:
                     if prices.data:
                         StripeService._price_cache[tier] = prices.data[0].id
                         return prices.data[0].id
-        except stripe.error.StripeError:
+        except Exception as e:
+            logger.warning(f"Error searching for existing products: {e}")
             pass
 
         # Create new product and price
@@ -81,7 +92,7 @@ class StripeService:
             logger.info(f"Created Stripe product/price for tier {tier}: {price.id}")
             return price.id
 
-        except stripe.error.StripeError as e:
+        except Exception as e:
             logger.error(f"Failed to create Stripe product/price: {str(e)}")
             raise
 
@@ -100,8 +111,13 @@ class StripeService:
         if tier not in StripeService.TIER_CONFIG:
             raise ValueError(f"Invalid subscription tier: {tier}")
 
+        # Ensure API key is set
+        if not stripe.api_key:
+            stripe.api_key = os.getenv("STRIPE_API_KEY", "")
+
         try:
             price_id = StripeService._get_or_create_price(tier)
+            logger.info(f"Using price_id: {price_id} for tier: {tier}")
 
             session = stripe.checkout.Session.create(
                 customer=customer_id,
@@ -131,8 +147,8 @@ class StripeService:
                 "session_id": session.id
             }
 
-        except stripe.error.StripeError as e:
-            logger.error(f"Failed to create checkout session: {str(e)}")
+        except Exception as e:
+            logger.error(f"Failed to create checkout session: {type(e).__name__}: {str(e)}")
             raise
 
     @staticmethod
@@ -151,7 +167,7 @@ class StripeService:
             )
             logger.info(f"Stripe customer created: {customer.id} for {email}")
             return customer.id
-        except stripe.error.StripeError as e:
+        except Exception as e:
             logger.error(f"Failed to create Stripe customer: {str(e)}")
             raise
 
@@ -196,7 +212,7 @@ class StripeService:
                     db.commit()
                     logger.info(f"Subscription updated for user {user.id}")
                     return True
-        except stripe.error.StripeError as e:
+        except Exception as e:
             logger.error(f"Failed to handle subscription update: {str(e)}")
         return False
 
@@ -269,6 +285,6 @@ class StripeService:
         except ValueError:
             logger.error("Invalid webhook payload")
             return False
-        except stripe.error.SignatureVerificationError:
+        except Exception:
             logger.error("Invalid webhook signature")
             return False
