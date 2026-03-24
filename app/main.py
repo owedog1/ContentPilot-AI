@@ -413,11 +413,12 @@ async def get_subscriptions():
 
 @app.post("/api/subscriptions/create-checkout-session")
 async def create_checkout_session(
+    request: Request,
     tier: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create Stripe checkout session"""
+    """Create Stripe Checkout Session and return URL"""
     if tier not in StripeService.TIER_CONFIG:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -433,26 +434,33 @@ async def create_checkout_session(
             )
             db.commit()
 
-        # Create subscription
-        sub_result = StripeService.create_subscription(
+        # Build success/cancel URLs
+        base_url = str(request.base_url).rstrip("/")
+        success_url = f"{base_url}/dashboard?payment=success"
+        cancel_url = f"{base_url}/dashboard?payment=cancelled"
+
+        # Create Stripe Checkout Session
+        result = StripeService.create_checkout_session(
             current_user.stripe_customer_id,
             tier,
-            db,
-            current_user.id
+            current_user.id,
+            success_url,
+            cancel_url
         )
 
-        return sub_result
+        return result
 
     except Exception as e:
-        logger.error(f"Subscription creation failed: {str(e)}")
+        logger.error(f"Checkout session creation failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create subscription"
+            detail="Failed to create checkout session"
         )
 
 @app.post("/api/webhooks/stripe")
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     """Handle Stripe webhooks"""
+    import json as json_lib
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
 
@@ -462,23 +470,26 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             detail="Invalid signature"
         )
 
-    event = stripe.Event.construct_from(
-        JSONResponse({"raw": payload}).body, settings.secret_key
-    )
+    try:
+        event = json_lib.loads(payload)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid payload")
+
+    event_type = event.get("type", "")
 
     # Handle different webhook events
-    if event["type"] == "customer.subscription.updated":
+    if event_type == "checkout.session.completed":
+        StripeService.handle_checkout_completed(
+            event["data"]["object"]["id"],
+            db
+        )
+    elif event_type == "customer.subscription.updated":
         StripeService.handle_subscription_updated(
             event["data"]["object"]["id"],
             db
         )
-    elif event["type"] == "customer.subscription.deleted":
+    elif event_type == "customer.subscription.deleted":
         StripeService.handle_subscription_deleted(
-            event["data"]["object"]["id"],
-            db
-        )
-    elif event["type"] == "payment_intent.payment_failed":
-        StripeService.handle_payment_intent_failed(
             event["data"]["object"]["id"],
             db
         )

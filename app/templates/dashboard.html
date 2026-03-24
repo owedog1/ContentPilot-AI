@@ -667,10 +667,11 @@
                     }
                 });
                 const data = await res.json();
-                if (res.ok && data.client_secret) {
-                    alert(`Subscription created! Status: ${data.status}\n\nIn a full deployment, this would open Stripe's payment form.\nSubscription ID: ${data.subscription_id}`);
+                if (res.ok && data.checkout_url) {
+                    // Redirect to Stripe Checkout
+                    window.location.href = data.checkout_url;
                 } else {
-                    alert(data.detail || 'Failed to create subscription. Please try again.');
+                    alert(data.detail || 'Failed to create checkout session. Please try again.');
                 }
             } catch (error) {
                 console.error('Upgrade error:', error);
