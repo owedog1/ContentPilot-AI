@@ -484,6 +484,10 @@
             document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active', 'text-gray-900', 'bg-gray-100'));
             event.target.classList.add('active', 'text-gray-900', 'bg-gray-100');
             event.target.classList.remove('text-gray-600');
+
+            // Reload data when switching tabs
+            if (tabName === 'history') loadContentHistory();
+            if (tabName === 'usage') updateUsageDisplay();
         }
 
         async function handleGenerateContent(event) {
@@ -544,7 +548,8 @@
                     updateUsageDisplay();
                 }
 
-                // Clear form
+                // Refresh history and clear form
+                loadContentHistory();
                 document.getElementById('prompt').value = '';
 
             } catch (error) {
