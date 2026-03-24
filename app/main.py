@@ -228,7 +228,7 @@ async def dashboard():
 
 @app.post("/api/auth/register", response_model=Token)
 async def register(user_data: UserRegister, db: Session = Depends(get_db)):
-    """Register a new user with 10 free generations"""
+    """Register a new user with 50 free generations"""
     # Check if user exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
@@ -244,7 +244,7 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
         full_name=user_data.full_name,
         hashed_password=hashed_password,
         subscription_tier=SubscriptionTierEnum.FREE,
-        usage_limit=10
+        usage_limit=50
     )
     db.add(new_user)
     db.commit()
@@ -385,6 +385,7 @@ async def get_content_history(
             "id": c.id,
             "content_type": c.content_type,
             "prompt": c.prompt,
+            "output": c.output,
             "tokens_used": c.tokens_used,
             "created_at": c.created_at
         }
@@ -508,6 +509,26 @@ async def create_support_ticket(
         "status": ticket.status.value,
         "created_at": ticket.created_at
     }
+
+@app.delete("/api/user/delete")
+async def delete_account(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Delete user account and all associated data"""
+    try:
+        # Delete user's content
+        db.query(Content).filter(Content.user_id == current_user.id).delete()
+        # Delete user's support tickets
+        db.query(SupportTicket).filter(SupportTicket.user_id == current_user.id).delete()
+        # Delete user
+        db.delete(current_user)
+        db.commit()
+        logger.info(f"User account deleted: {current_user.id}")
+        return {"status": "deleted"}
+    except Exception as e:
+        logger.error(f"Account deletion failed: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete account"
+        )
 
 @app.get("/api/health")
 async def health_check():

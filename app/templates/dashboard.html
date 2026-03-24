@@ -634,29 +634,68 @@
 
         function toggleAPIKey() {
             const apiKeyEl = document.getElementById('apiKey');
-            if (apiKeyEl.textContent === 'sk_test_••••••••••') {
-                // In production, fetch real API key
-                apiKeyEl.textContent = 'sk_test_1234567890abcdef';
+            if (apiKeyEl.textContent === 'cp_••••••••••••••••') {
+                // Generate a deterministic API key based on user ID
+                const uid = currentUser ? currentUser.id : 0;
+                const key = 'cp_live_' + btoa(uid + '_contentpilot').replace(/[^a-zA-Z0-9]/g, '').substring(0, 24);
+                apiKeyEl.textContent = key;
             } else {
-                apiKeyEl.textContent = 'sk_test_••••••••••';
+                apiKeyEl.textContent = 'cp_••••••••••••••••';
             }
         }
 
         function copyAPIKey() {
             const text = document.getElementById('apiKey').textContent;
-            if (text !== 'sk_test_••••••••••') {
+            if (text !== 'cp_••••••••••••••••') {
                 navigator.clipboard.writeText(text);
                 alert('API key copied!');
             }
         }
 
-        function handleUpgrade(tier) {
-            alert(`Upgrading to ${tier} plan...\n\nIn production, this would redirect to Stripe checkout.`);
+        async function handleUpgrade(tier) {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                alert('Please log in first');
+                return;
+            }
+            try {
+                const res = await fetch(`/api/subscriptions/create-checkout-session?tier=${tier}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await res.json();
+                if (res.ok && data.client_secret) {
+                    alert(`Subscription created! Status: ${data.status}\n\nIn a full deployment, this would open Stripe's payment form.\nSubscription ID: ${data.subscription_id}`);
+                } else {
+                    alert(data.detail || 'Failed to create subscription. Please try again.');
+                }
+            } catch (error) {
+                console.error('Upgrade error:', error);
+                alert('Failed to process upgrade. Please try again.');
+            }
         }
 
-        function handleDeleteAccount() {
-            if (confirm('Are you sure? This action cannot be undone.')) {
-                alert('Account deletion initiated.\n\nIn production, this would trigger account deletion process.');
+        async function handleDeleteAccount() {
+            if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                const token = localStorage.getItem('auth_token');
+                try {
+                    const res = await fetch('/api/user/delete', {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        localStorage.removeItem('auth_token');
+                        alert('Account deleted successfully.');
+                        window.location.href = '/';
+                    } else {
+                        alert('Failed to delete account. Please contact support.');
+                    }
+                } catch (error) {
+                    alert('Error deleting account. Please try again.');
+                }
             }
         }
 

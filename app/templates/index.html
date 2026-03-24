@@ -919,7 +919,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        name: name,
+                        full_name: name,
                         email: email,
                         password: password
                     })
@@ -927,9 +927,9 @@
 
                 const data = await response.json();
 
-                if (response.ok && data.token) {
+                if (response.ok && data.access_token) {
                     // Store token
-                    localStorage.setItem('auth_token', data.token);
+                    localStorage.setItem('auth_token', data.access_token);
 
                     // Show success message
                     showSuccess('signupFormSuccess', 'Account created successfully! Redirecting...');
@@ -939,7 +939,7 @@
                         window.location.href = '/dashboard';
                     }, 1500);
                 } else {
-                    showError('signupFormError', data.message || 'Signup failed. Please try again.');
+                    showError('signupFormError', data.detail || 'Signup failed. Please try again.');
                 }
             } catch (error) {
                 showError('signupFormError', 'Network error. Please check your connection and try again.');
@@ -990,9 +990,9 @@
 
                 const data = await response.json();
 
-                if (response.ok && data.token) {
+                if (response.ok && data.access_token) {
                     // Store token
-                    localStorage.setItem('auth_token', data.token);
+                    localStorage.setItem('auth_token', data.access_token);
 
                     // Show success message
                     showSuccess('loginFormSuccess', 'Login successful! Redirecting...');
@@ -1002,7 +1002,7 @@
                         window.location.href = '/dashboard';
                     }, 1500);
                 } else {
-                    showError('loginFormError', data.message || 'Login failed. Please check your credentials.');
+                    showError('loginFormError', data.detail || 'Login failed. Please check your credentials.');
                 }
             } catch (error) {
                 showError('loginFormError', 'Network error. Please check your connection and try again.');

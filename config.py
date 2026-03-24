@@ -53,22 +53,22 @@ class Config:
     PRO_TOKENS_PER_MONTH = 500000
     AGENCY_TOKENS_PER_MONTH = None  # Unlimited
 
-    # Pricing
+    # Pricing (matches landing page and Stripe config)
     PRICING = {
         "starter": {
-            "monthly": 99.0,
-            "annual": 990.0,
-            "tokens_per_month": 100000
+            "monthly": 29.0,
+            "annual": 290.0,
+            "generations_per_month": 50
         },
         "pro": {
-            "monthly": 299.0,
-            "annual": 2990.0,
-            "tokens_per_month": 500000
+            "monthly": 79.0,
+            "annual": 790.0,
+            "generations_per_month": 200
         },
         "agency": {
-            "monthly": 999.0,
-            "annual": 9990.0,
-            "tokens_per_month": None  # Unlimited
+            "monthly": 199.0,
+            "annual": 1990.0,
+            "generations_per_month": None  # Unlimited
         }
     }
 
